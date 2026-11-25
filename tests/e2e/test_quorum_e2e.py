@@ -143,7 +143,10 @@ def _fees(client, factor: int):
 def _attempt(client, account, contract, method, args=None, value=0):
     last = None
     for attempt in range(SEND_ATTEMPTS):
-        fees = None if attempt == 0 else _fees(client, 2**attempt)
+        # This suite is the money paths, and every call in it carries value:
+        # Studio's quoted fee comes up short for those, so the first send already
+        # deposits twice the quote and later sends multiply it.
+        fees = _fees(client, 2 ** (attempt + 1))
         try:
             tx_hash = client.write_contract(
                 contract,

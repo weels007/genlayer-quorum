@@ -87,7 +87,9 @@ jobs:
     needs: studionet
     if: ${{ !cancelled() && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Every call here carries value and is driven to a refusal, so each send pays
+    # twice the quoted fee and the suite is slow rather than stuck.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
         with:
