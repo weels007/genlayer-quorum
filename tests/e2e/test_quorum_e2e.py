@@ -274,11 +274,9 @@ def test_02_a_deposit_below_the_floor_is_a_credit(client, account, contract):
         [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, PAYEE, f"e2e-void-{RUN}"],
         DEPOSIT - 1,
     )
-    assert not _succeeded(result), (
-        "a deposit below the floor was accepted: " f"{result}"
+    assert len(_grant_ids(client, contract)) == before, (
+        "a deposit below the floor opened a grant: " f"{result}"
     )
-
-    assert len(_grant_ids(client, contract)) == before
     if _definite_rollback(result):
         # A zero-value call reverts; a call with value attached becomes a credit.
         pytest.skip("the network reverted the send instead of booking a credit")
@@ -299,11 +297,13 @@ def test_03_a_duplicate_reference_is_a_credit(client, account, contract):
         DEPOSIT,
     )
 
-    if _succeeded(result):
-        raise AssertionError(f"a duplicate reference opened a second grant: {result}")
+    # A refused payable call returns "credit", so the call succeeds and the grant
+    # ids do not grow: the credit is what tells the refusal apart from an opening.
     if _definite_rollback(result):
         pytest.skip("the network reverted the send instead of booking a credit")
-    assert len(_grant_ids(client, contract)) == before
+    assert len(_grant_ids(client, contract)) == before, (
+        "a duplicate reference opened a second grant: " f"{result}"
+    )
     assert _credit(client, contract, account) == credit_before + DEPOSIT
 
 
@@ -321,11 +321,11 @@ def test_04_a_payee_is_never_the_donor(client, account, contract):
         DEPOSIT,
     )
 
-    if _succeeded(result):
-        raise AssertionError(f"the donor paid itself: {result}")
     if _definite_rollback(result):
         pytest.skip("the network reverted the send instead of booking a credit")
-    assert len(_grant_ids(client, contract)) == before
+    assert len(_grant_ids(client, contract)) == before, (
+        "the donor paid itself: " f"{result}"
+    )
     assert _credit(client, contract, account) == credit_before + DEPOSIT
 
 
