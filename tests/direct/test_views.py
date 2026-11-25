@@ -32,7 +32,7 @@ def _opened(direct_vm, contract, donor, payee, ref="ref-1"):
     direct_vm.sender = donor
     direct_vm.value = DEPOSIT
     grant_id = contract.open_grant(
-        STATEMENT, [SUPPORTS_URL, CONTRA_URL, THIRD_URL], THRESHOLD, payee.address, ref
+        STATEMENT, [SUPPORTS_URL, CONTRA_URL, THIRD_URL], THRESHOLD, payee, ref
     )
     direct_vm.value = 0
     return grant_id

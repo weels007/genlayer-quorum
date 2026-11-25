@@ -23,6 +23,12 @@ on:
       - "deployment.json"
       - ".github/workflows/live.yml"
 
+# Two runs of this workflow open grants and spend from the same register, so
+# they must not interleave either: a newer run replaces one that has not started.
+concurrency:
+  group: live-suites
+  cancel-in-progress: false
+
 jobs:
   studionet:
     name: Studio-mode tests

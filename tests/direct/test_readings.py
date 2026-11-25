@@ -74,7 +74,7 @@ def _opened(direct_vm, contract, donor, payee, sources, threshold=THRESHOLD):
     direct_vm.sender = donor
     direct_vm.value = DEPOSIT
     grant_id = contract.open_grant(
-        STATEMENT, list(sources), threshold, payee.address, "ref-1"
+        STATEMENT, list(sources), threshold, payee, "ref-1"
     )
     direct_vm.value = 0
     return grant_id

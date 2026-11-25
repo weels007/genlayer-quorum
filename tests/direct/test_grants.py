@@ -37,7 +37,7 @@ def _opened(
         statement,
         list(sources or [SUPPORTS_URL, CONTRA_URL]),
         threshold,
-        payee.address,
+        payee,
         ref,
     )
     direct_vm.value = 0
@@ -75,7 +75,9 @@ def test_a_zero_deposit_is_a_plain_revert(direct_vm, direct_deploy, direct_alice
     direct_vm.sender = direct_alice
     direct_vm.value = 0
     with direct_vm.expect_revert("[EXPECTED]:zero_deposit"):
-        contract.open_grant(STATEMENT, [SUPPORTS_URL, CONTRA_URL], WINDOW, direct_bob.address, "ref-1")
+        contract.open_grant(
+            STATEMENT, [SUPPORTS_URL, CONTRA_URL], WINDOW, direct_bob, "ref-1"
+        )
 
     assert contract.get_grant_ids()["ids"] == []
 
@@ -190,7 +192,7 @@ def test_a_payee_is_never_the_donor(direct_vm, direct_deploy, direct_alice):
     direct_vm.sender = direct_alice
     direct_vm.value = DEPOSIT
     result = contract.open_grant(
-        STATEMENT, [SUPPORTS_URL, CONTRA_URL], WINDOW, direct_alice.address, "ref-self"
+        STATEMENT, [SUPPORTS_URL, CONTRA_URL], WINDOW, direct_alice, "ref-self"
     )
     direct_vm.value = 0
 

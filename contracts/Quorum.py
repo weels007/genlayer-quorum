@@ -185,8 +185,20 @@ def _addr_text(addr) -> str:
 
 
 def _coerce_addr(value):
+    """An address from bytes, an Address, or a 0x-prefixed hex string.
+
+    The harness hands a raw twenty-byte address to a direct test, and a live call
+    hands whatever its argument encoded to; the contract takes both.
+    """
     if hasattr(value, "as_bytes"):
         return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text[:2].lower() == "0x":
+            text = text[2:]
+        return Address(bytes.fromhex(text))
+    if isinstance(value, (bytes, bytearray)):
+        return Address(bytes(value))
     return Address(value)
 
 
@@ -619,6 +631,11 @@ Rules:
         needed = int(threshold)
         ref = _sanitize(grant_ref, MAX_REF_CHARS)
 
+        try:
+            payee_address = _coerce_addr(payee)
+        except Exception:
+            payee_address = None
+
         reason = ""
         if amount < MIN_DEPOSIT:
             reason = "deposit_too_small"
@@ -640,7 +657,7 @@ Rules:
             reason = "invalid_source_url"
         elif needed < MIN_THRESHOLD or needed > len(clean_sources):
             reason = "bad_threshold"
-        elif not _payee_allowed(payee, sender):
+        elif payee_address is None or not _payee_allowed(payee_address, sender):
             reason = "invalid_payee"
 
         if reason:
@@ -654,7 +671,7 @@ Rules:
         self.grants[grant_id] = Grant(
             grant_id=grant_id,
             donor=sender,
-            payee=payee,
+            payee=payee_address,
             statement=clean_statement,
             sources="\n".join(clean_sources),
             threshold=u32(needed),

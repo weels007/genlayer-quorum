@@ -41,6 +41,10 @@ DEPOSIT = 200
 THRESHOLD = 2
 ATTEMPTS = 3
 
+# The payee never signs anything: a grant is paid to an address, so a literal
+# address that is neither the donor nor a wallet in this repository is enough.
+PAYEE = "0x1111111111111111111111111111111111111111"
+
 STATEMENT = "The project publishes a signed release every month."
 BASE = "https://raw.githubusercontent.com/weels007/genlayer-quorum/main/testdata/"
 SUPPORTS_URL = BASE + "supports.txt"
@@ -254,7 +258,7 @@ def _open(client, donor, contract, ref, sources=None, threshold=THRESHOLD):
             STATEMENT,
             list(sources or [SUPPORTS_URL, CONTRA_URL, UNGROUNDABLE_URL]),
             threshold,
-            str(donor.address),
+            PAYEE,
             f"{ref}-{RUN}",
         ],
         value=DEPOSIT,

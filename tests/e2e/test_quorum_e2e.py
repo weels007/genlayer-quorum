@@ -38,6 +38,9 @@ SEND_ATTEMPTS = 3
 
 DEPOSIT = 200
 THRESHOLD = 2
+# The payee never signs anything: a grant is paid to an address, so a literal
+# address that is neither the donor nor a wallet in this repository is enough.
+PAYEE = "0x1111111111111111111111111111111111111111"
 STATEMENT = "The project publishes a signed release every month."
 SUPPORTS_URL = (
     "https://raw.githubusercontent.com/weels007/genlayer-quorum/main/testdata/supports.txt"
@@ -234,7 +237,7 @@ def _open(client, donor, contract, ref, sources=None, threshold=THRESHOLD):
             STATEMENT,
             list(sources or [SUPPORTS_URL, CONTRA_URL]),
             threshold,
-            str(donor.address),
+            PAYEE,
             f"{ref}-{RUN}",
         ],
         value=DEPOSIT,
@@ -265,7 +268,7 @@ def test_02_a_deposit_below_the_floor_is_a_credit(client, account, contract):
         account,
         contract,
         "open_grant",
-        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, str(account.address), f"e2e-void-{RUN}"],
+        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, PAYEE, f"e2e-void-{RUN}"],
         DEPOSIT - 1,
     )
     assert not _succeeded(result), (
@@ -290,7 +293,7 @@ def test_03_a_duplicate_reference_is_a_credit(client, account, contract):
         account,
         contract,
         "open_grant",
-        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, str(account.address), ref],
+        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, PAYEE, ref],
         DEPOSIT,
     )
 
@@ -311,7 +314,7 @@ def test_04_a_payee_is_never_the_donor(client, account, contract):
         account,
         contract,
         "open_grant",
-        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, str(account.address), f"e2e-self-{RUN}"],
+        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], THRESHOLD, PAYEE, f"e2e-self-{RUN}"],
         DEPOSIT,
     )
 
@@ -328,10 +331,10 @@ def test_05_a_bad_grant_is_a_credit(client, account, contract):
     credit_before = _credit(client, contract, account)
 
     for args in (
-        [STATEMENT, [SUPPORTS_URL], THRESHOLD, str(account.address), f"e2e-count-{RUN}"],
-        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], 1, str(account.address), f"e2e-bar-{RUN}"],
-        ["soon", [SUPPORTS_URL, CONTRA_URL], THRESHOLD, str(account.address), f"e2e-short-{RUN}"],
-        [STATEMENT, ["http://source.example.com/page", CONTRA_URL], THRESHOLD, str(account.address), f"e2e-url-{RUN}"],
+        [STATEMENT, [SUPPORTS_URL], THRESHOLD, PAYEE, f"e2e-count-{RUN}"],
+        [STATEMENT, [SUPPORTS_URL, CONTRA_URL], 1, PAYEE, f"e2e-bar-{RUN}"],
+        ["soon", [SUPPORTS_URL, CONTRA_URL], THRESHOLD, PAYEE, f"e2e-short-{RUN}"],
+        [STATEMENT, ["http://source.example.com/page", CONTRA_URL], THRESHOLD, PAYEE, f"e2e-url-{RUN}"],
     ):
         result = _attempt(client, account, contract, "open_grant", args, DEPOSIT)
         if _definite_rollback(result):

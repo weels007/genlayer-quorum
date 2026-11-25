@@ -64,7 +64,7 @@ def _read(direct_vm, direct_deploy, donor, payee, caller):
     direct_vm.sender = donor
     direct_vm.value = DEPOSIT
     grant_id = contract.open_grant(
-        STATEMENT, [SUPPORTS_URL, CONTRA_URL, THIRD_URL], THRESHOLD, payee.address, "ref-1"
+        STATEMENT, [SUPPORTS_URL, CONTRA_URL, THIRD_URL], THRESHOLD, payee, "ref-1"
     )
     direct_vm.value = 0
 
