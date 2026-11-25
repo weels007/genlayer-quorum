@@ -1,0 +1,2 @@
+The project publishes a signed release every month. Each release is written up
+in the release notes, and the repository is public.

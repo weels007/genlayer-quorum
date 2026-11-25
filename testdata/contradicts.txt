@@ -1,0 +1,2 @@
+The project has never published a signed release, and there are no release notes
+for it. Nothing here is released at all.

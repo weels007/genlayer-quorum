@@ -1,0 +1,129 @@
+name: Live suites
+
+# Both suites drive the SAME deployed register: they open grants and spend from
+# them, so they must not interleave — a run that picks the newest grant id can
+# pick the other suite's grant, which already holds a deposit. They are two jobs of
+# one workflow, and the money paths wait for the Studio suite.
+#
+# Both jobs refuse to run while deployment.json points at an address that is not
+# this source: a suite run against a stale register proves nothing about the code
+# in the checkout, and its failure would look like a contract bug.
+
+on:
+  workflow_dispatch:
+
+  workflow_run:
+    workflows: ["Deploy Contract"]
+    types: [completed]
+
+  push:
+    paths:
+      - "tests/integration/**"
+      - "tests/e2e/**"
+      - "deployment.json"
+      - ".github/workflows/live.yml"
+
+jobs:
+  studionet:
+    name: Studio-mode tests
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # A workflow_run checks out the commit that triggered the deploy, which
+          # is older than the deployment.json the bot commits; test main instead.
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      # No network and no wallet: it compares two files.
+      - name: The deployed register is this source
+        run: python scripts/verify_deployment.py
+
+      - name: Check the wallet secrets
+        id: secrets
+        run: |
+          if [ -z "${{ secrets.QUORUM_DEPLOYER_KEYSTORE }}" ] && [ -z "${{ secrets.ASSIZE_DEPLOYER_KEYSTORE }}" ] && [ -z "${{ secrets.AUSPICE_DEPLOYER_KEYSTORE }}" ]; then
+            echo "::notice title=Studio suite skipped::Add QUORUM_DEPLOYER_KEYSTORE and QUORUM_DEPLOYER_PASSWORD (or the same pair under the ASSIZE_ or AUSPICE_ prefix) to drive the deployed register."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Studio suite
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          QUORUM_DEPLOYER_KEYSTORE: ${{ secrets.QUORUM_DEPLOYER_KEYSTORE }}
+          QUORUM_DEPLOYER_PASSWORD: ${{ secrets.QUORUM_DEPLOYER_PASSWORD }}
+          ASSIZE_DEPLOYER_KEYSTORE: ${{ secrets.ASSIZE_DEPLOYER_KEYSTORE }}
+          ASSIZE_DEPLOYER_PASSWORD: ${{ secrets.ASSIZE_DEPLOYER_PASSWORD }}
+          AUSPICE_DEPLOYER_KEYSTORE: ${{ secrets.AUSPICE_DEPLOYER_KEYSTORE }}
+          AUSPICE_DEPLOYER_PASSWORD: ${{ secrets.AUSPICE_DEPLOYER_PASSWORD }}
+          # The stranger who disputes a grant needs a genuinely different account.
+          QUORUM_TESTER2_KEYSTORE: ${{ secrets.QUORUM_TESTER2_KEYSTORE }}
+          QUORUM_TESTER2_PASSWORD: ${{ secrets.QUORUM_TESTER2_PASSWORD }}
+          QUORUM_TESTER_KEYSTORE2: ${{ secrets.QUORUM_TESTER_KEYSTORE2 }}
+          QUORUM_TESTER_PASSWORD2: ${{ secrets.QUORUM_TESTER_PASSWORD2 }}
+          ASSIZE_TESTER2_KEYSTORE: ${{ secrets.ASSIZE_TESTER2_KEYSTORE }}
+          ASSIZE_TESTER2_PASSWORD: ${{ secrets.ASSIZE_TESTER2_PASSWORD }}
+          ASSIZE_TESTER_KEYSTORE2: ${{ secrets.ASSIZE_TESTER_KEYSTORE2 }}
+          ASSIZE_TESTER_PASSWORD2: ${{ secrets.ASSIZE_TESTER_PASSWORD2 }}
+          AUSPICE_TESTER2_KEYSTORE: ${{ secrets.AUSPICE_TESTER2_KEYSTORE }}
+          AUSPICE_TESTER2_PASSWORD: ${{ secrets.AUSPICE_TESTER2_PASSWORD }}
+          AUSPICE_TESTER_KEYSTORE2: ${{ secrets.AUSPICE_TESTER_KEYSTORE2 }}
+          AUSPICE_TESTER_PASSWORD2: ${{ secrets.AUSPICE_TESTER_PASSWORD2 }}
+        run: pytest tests/integration -v -s -rs
+
+  e2e:
+    name: Money paths on the deployed register
+    needs: studionet
+    if: ${{ !cancelled() && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - name: The recorded address is this contract
+        run: python scripts/verify_deployment.py
+
+      - name: Check the wallet secrets
+        id: secrets
+        run: |
+          if [ -z "${{ secrets.QUORUM_DEPLOYER_KEYSTORE }}" ] && [ -z "${{ secrets.ASSIZE_DEPLOYER_KEYSTORE }}" ] && [ -z "${{ secrets.AUSPICE_DEPLOYER_KEYSTORE }}" ]; then
+            echo "::notice title=E2E skipped::Add QUORUM_DEPLOYER_KEYSTORE and QUORUM_DEPLOYER_PASSWORD (or the same pair under the ASSIZE_ or AUSPICE_ prefix) to drive the deployed register."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "${{ secrets.QUORUM_TESTER2_KEYSTORE }}" ] && [ -z "${{ secrets.ASSIZE_TESTER2_KEYSTORE }}" ] && [ -z "${{ secrets.AUSPICE_TESTER2_KEYSTORE }}" ]; then
+            echo "::warning title=Stranger cases skipped::No keystore is filed under tester2, so the cases that need a stranger skip."
+          fi
+
+      - name: Money paths
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          QUORUM_DEPLOYER_KEYSTORE: ${{ secrets.QUORUM_DEPLOYER_KEYSTORE }}
+          QUORUM_DEPLOYER_PASSWORD: ${{ secrets.QUORUM_DEPLOYER_PASSWORD }}
+          ASSIZE_DEPLOYER_KEYSTORE: ${{ secrets.ASSIZE_DEPLOYER_KEYSTORE }}
+          ASSIZE_DEPLOYER_PASSWORD: ${{ secrets.ASSIZE_DEPLOYER_PASSWORD }}
+          AUSPICE_DEPLOYER_KEYSTORE: ${{ secrets.AUSPICE_DEPLOYER_KEYSTORE }}
+          AUSPICE_DEPLOYER_PASSWORD: ${{ secrets.AUSPICE_DEPLOYER_PASSWORD }}
+          QUORUM_TESTER2_KEYSTORE: ${{ secrets.QUORUM_TESTER2_KEYSTORE }}
+          QUORUM_TESTER2_PASSWORD: ${{ secrets.QUORUM_TESTER2_PASSWORD }}
+          QUORUM_TESTER_KEYSTORE2: ${{ secrets.QUORUM_TESTER_KEYSTORE2 }}
+          QUORUM_TESTER_PASSWORD2: ${{ secrets.QUORUM_TESTER_PASSWORD2 }}
+          ASSIZE_TESTER2_KEYSTORE: ${{ secrets.ASSIZE_TESTER2_KEYSTORE }}
+          ASSIZE_TESTER2_PASSWORD: ${{ secrets.ASSIZE_TESTER2_PASSWORD }}
+          ASSIZE_TESTER_KEYSTORE2: ${{ secrets.ASSIZE_TESTER_KEYSTORE2 }}
+          ASSIZE_TESTER_PASSWORD2: ${{ secrets.ASSIZE_TESTER_PASSWORD2 }}
+          AUSPICE_TESTER2_KEYSTORE: ${{ secrets.AUSPICE_TESTER2_KEYSTORE }}
+          AUSPICE_TESTER2_PASSWORD: ${{ secrets.AUSPICE_TESTER2_PASSWORD }}
+          AUSPICE_TESTER_KEYSTORE2: ${{ secrets.AUSPICE_TESTER_KEYSTORE2 }}
+          AUSPICE_TESTER_PASSWORD2: ${{ secrets.AUSPICE_TESTER_PASSWORD2 }}
+        run: pytest tests/e2e -v -s -rs
