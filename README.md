@@ -35,7 +35,7 @@ deploys the register once, writes the file, and commits it back to `main`.
 
 | | |
 |---|---|
-| **Contract** | _recorded by the Deploy Contract workflow_ |
+| **Contract** | [`0xb9e7E00C0D2FC3556Fc02d11195D0497c6c319aE`](https://explorer-studio.genlayer.com/address/0xb9e7E00C0D2FC3556Fc02d11195D0497c6c319aE) |
 | **Network** | GenLayer Studio — chainId `61999` (`0xf22f`), test GEN only |
 | **Evidence** | [Actions](https://github.com/weels007/genlayer-quorum/actions) — direct, Studio, money paths, every deployment |
 

@@ -23,8 +23,8 @@ decision.
 | | |
 |---|---|
 | Network | GenLayer Studio — chainId `61999` (`0xf22f`) |
-| Contract | _recorded by the Deploy Contract workflow_ |
-| Source revision | _the first twelve characters of the SHA-256 of `contracts/Quorum.py`_ |
+| Contract | [`0xb9e7E00C0D2FC3556Fc02d11195D0497c6c319aE`](https://explorer-studio.genlayer.com/address/0xb9e7E00C0D2FC3556Fc02d11195D0497c6c319aE) |
+| Source revision | `87d222f32172` — the first twelve characters of the SHA-256 of `contracts/Quorum.py` |
 | Owner | none: no pause, no setter, no upgrade path |
 | Money | test GEN only |
 
