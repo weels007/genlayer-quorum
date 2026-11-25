@@ -39,6 +39,11 @@ ADDRESS_VALUE = re.compile(r"0x[0-9a-fA-F]{40}")
 MIN_DEPOSIT = 200
 MIN_THRESHOLD = 2
 MAX_ATTEMPTS = 3
+# The bounds the reading itself relies on: at most four sources are read, and a
+# quote shorter than twenty letters cannot ground in any of them. An address that
+# disagrees on either is not this contract.
+MAX_SOURCES = 4
+MIN_QUOTE_CHARS = 20
 
 
 def recorded() -> dict:
@@ -236,6 +241,13 @@ def main() -> int:
     if int(rules.get("min_threshold", 0)) != MIN_THRESHOLD:
         raise SystemExit(
             f"[deploy] the contract at {address} does not require a quorum: {rules}"
+        )
+    if int(rules.get("max_sources", 0)) != MAX_SOURCES or int(
+        rules.get("min_quote_chars", 0)
+    ) != MIN_QUOTE_CHARS:
+        raise SystemExit(
+            f"[deploy] the contract at {address} does not read the sources this pack "
+            f"describes: {rules}"
         )
     if int(summary.get("grants", -1)) != 0:
         raise SystemExit(f"[deploy] the register at {address} is not empty: {summary}")
