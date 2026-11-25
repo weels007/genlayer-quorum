@@ -40,7 +40,7 @@ and fails if the contract has drifted from the recorded address.
 | **Money paths**, live | a deposit below the floor as a credit and the credit withdrawn, a duplicate reference, a self-payee, a stake that does not match, a dispute with no wider bar, a stranger cancelling, and an unearned settle or void |
 | **Lint** | `genvm-lint check contracts/Quorum.py` |
 
-Every public method — seven writes and nine views — is exercised against the
+Every public method — seven writes and ten views — is exercised against the
 deployed address. The evidence is the
 [Actions](https://github.com/weels007/genlayer-quorum/actions) history.
 

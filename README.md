@@ -213,7 +213,7 @@ SUBMISSION.md                    the short pack for a reviewer
 
 [`SUBMISSION.md`](SUBMISSION.md) is the short pack for a reviewer: what the
 contract is, the deployed facts, what each suite proves, and the limits that are
-still true. Every public method — seven writes and nine views — is exercised
+still true. Every public method — seven writes and ten views — is exercised
 against the deployed address; the Studio suite and the money paths are the evidence.
 
 `python scripts/verify_deployment.py` proves the address and the source are the same

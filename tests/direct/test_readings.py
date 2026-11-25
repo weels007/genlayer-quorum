@@ -104,16 +104,16 @@ def test_a_quorum_grants_the_payee(
     _mock_three(
         direct_vm,
         ("SUPPORTS", SUPPORTS_QUOTE),
-        ("SUPPORTS", SUPPORTS_QUOTE),
         ("CONTRADICTS", CONTRA_QUOTE),
+        ("SUPPORTS", SUPPORTS_QUOTE),
     )
     assert _attested(direct_vm, contract, direct_owner, grant_id) == "GRANTED"
 
     record = contract.get_grant(grant_id)
     assert record["status"] == "DECIDED"
     assert record["decision"] == "GRANTED"
-    assert record["supports"] == "110"
-    assert record["contradicts"] == "001"
+    assert record["supports"] == "101"
+    assert record["contradicts"] == "010"
     assert contract.get_summary()["granted"] == 1
 
     direct_vm.sender = direct_owner
@@ -131,12 +131,12 @@ def test_a_quorum_sends_the_grant_back(
     direct_vm.warp("2025-01-01T00:00:00Z")
     contract = _deployed(direct_deploy)
     grant_id = _opened(
-        direct_vm, contract, direct_alice, direct_bob, [CONTRA_URL, UNGROUNDABLE_URL]
+        direct_vm, contract, direct_alice, direct_bob, [CONTRA_URL, THIRD_URL]
     )
 
-    _mock_sources(direct_vm)
+    _mock_sources(direct_vm, third=CONTRA_PAGE)
     _mock_answer(direct_vm, r"source\.example\.com/contradicts", "CONTRADICTS", CONTRA_QUOTE)
-    _mock_answer(direct_vm, r"source\.example\.com/ungroundable", "CONTRADICTS", CONTRA_QUOTE)
+    _mock_answer(direct_vm, r"source\.example\.com/third", "CONTRADICTS", CONTRA_QUOTE)
 
     assert _attested(direct_vm, contract, direct_bob, grant_id) == "DENIED"
 
@@ -236,7 +236,11 @@ def test_a_disputed_quorum_can_still_grant(
 ):
     contract = _deployed(direct_deploy)
     grant_id = _opened(
-        direct_vm, contract, direct_alice, direct_bob, [SUPPORTS_URL, CONTRA_URL, THIRD_URL]
+        direct_vm,
+        contract,
+        direct_alice,
+        direct_bob,
+        [SUPPORTS_URL, THIRD_URL, THIRD_URL + "?b"],
     )
     _disputed(direct_vm, contract, direct_owner, grant_id)
 
@@ -261,14 +265,17 @@ def test_a_unanimous_denial_pays_the_refuter(
 ):
     contract = _deployed(direct_deploy)
     grant_id = _opened(
-        direct_vm, contract, direct_alice, direct_bob, [CONTRA_URL, UNGROUNDABLE_URL, THIRD_URL]
+        direct_vm,
+        contract,
+        direct_alice,
+        direct_bob,
+        [CONTRA_URL, THIRD_URL, THIRD_URL + "?c"],
     )
     _disputed(direct_vm, contract, direct_owner, grant_id)
 
     _mock_sources(direct_vm, third=CONTRA_PAGE)
     for fragment in (
         r"source\.example\.com/contradicts",
-        r"source\.example\.com/ungroundable",
         r"source\.example\.com/third",
     ):
         _mock_answer(direct_vm, fragment, "CONTRADICTS", CONTRA_QUOTE)
