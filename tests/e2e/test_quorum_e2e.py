@@ -282,6 +282,12 @@ def test_02_a_deposit_below_the_floor_is_a_credit(client, account, contract):
         pytest.skip("the network reverted the send instead of booking a credit")
     assert _credit(client, contract, account) == credit_before + (DEPOSIT - 1)
 
+    # The credit is an exit, not a balance: the money comes back to its sender.
+    withdrawn = _attempt(client, account, contract, "withdraw_credit")
+    assert _credit(client, contract, account) == credit_before, (
+        "withdraw_credit left the credit in place: " f"{withdrawn}"
+    )
+
 
 def test_03_a_duplicate_reference_is_a_credit(client, account, contract):
     _open(client, account, contract, "e2e-dupe")

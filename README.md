@@ -2,6 +2,23 @@
 
 **A grant released only when a quorum of independent sources agrees.**
 
+<div align="center">
+
+<p>
+  <a href="https://github.com/weels007/genlayer-quorum/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/weels007/genlayer-quorum/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/weels007/genlayer-quorum/actions/workflows/live.yml"><img alt="Live suites" src="https://github.com/weels007/genlayer-quorum/actions/workflows/live.yml/badge.svg"></a>
+  <a href="https://github.com/weels007/genlayer-quorum/actions/workflows/deploy-contract.yml"><img alt="Deploy contract" src="https://github.com/weels007/genlayer-quorum/actions/workflows/deploy-contract.yml/badge.svg"></a>
+</p>
+
+<p>
+  <img alt="GenLayer Studio 61999" src="https://img.shields.io/badge/network-GenLayer%20Studio%2061999-e6c98b">
+  <img alt="Python Intelligent Contract" src="https://img.shields.io/badge/contract-Python%20Intelligent%20Contract-957bff">
+</p>
+
+</div>
+
+---
+
 One donor locks a grant behind one statement and a frozen list of independent
 pages. No single page decides it: the committee reads every page once, and the
 grant is released only when at least `threshold` of them back the statement. A
@@ -166,7 +183,7 @@ Residual risks, stated plainly:
 |---|---|---|
 | **Direct** | opening, every refusal, the quorum, the per-source grounding, the wider bar after a dispute, the denial, the void and the ledger invariant | `pytest tests/direct -v` |
 | **Studio** | the deployed register: a real grant, a live quorum of three sources, a dispute that raises the bar, a grant nobody could read that is voided, and the settlement, with the payout checked twice — the ledger moves and the contract's real balance falls | `pytest tests/integration -v -s` |
-| **End to end** | the money paths without a model: a deposit below the floor, a duplicate reference, a self-payee, a stake that does not match, a dispute with no wider bar, a stranger cancelling, and an unearned settle or void | `pytest tests/e2e -v -s` |
+| **End to end** | the money paths without a model: a deposit below the floor, the credit taken back, a duplicate reference, a self-payee, a stake that does not match, a dispute with no wider bar, a stranger cancelling, and an unearned settle or void | `pytest tests/e2e -v -s` |
 
 Every assertion in the live suites is a delta, and every reference carries the
 run's start time, so they can be re-run against the same register.
